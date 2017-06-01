@@ -1,0 +1,33 @@
+#
+#  Using the OpenWhisk Dockerskelaton because, all other things being equal,
+#  it ensures maximum compatibility for the runtime cobol engine.  Which
+#  means I guess that alpine linux will be our go-to distro, with a healthy
+#  serving of 'gmp', 'db', and 'ncurses'.
+#
+#  TODO:  Do away with the DB requirement -- it really doesn't help with our
+#         ISAM process.  Can I configure that now?  Probably not until I
+#         have an alternative.
+#
+FROM openwhisk/dockerskeleton:latest
+RUN apk update && apk upgrade
+#
+#  Break here to allow for caching of image after upgrade -- it should shorten
+#  the lather-rinse-repeat cycle time
+#
+RUN apk add curl alpine-sdk autoconf gmp-dev db-dev ncurses-dev
+RUN mkdir -p /build/dest && cd /build && \
+    curl -LO https://downloads.sourceforge.net/project/open-cobol/gnu-cobol/2.0/gnu-cobol-2.0_rc-2.tar.gz && \
+    tar zfxv gnu-cobol-2.0_rc-2.tar.gz && \
+    cd gnu-cobol-2.0 && \
+    ./configure && \
+    make && make check
+RUN cd /build/gnu-cobol-2.0 && make DESTDIR=/build/dest install
+RUN cd /build/dest && \
+    find . -type f -print0 | xargs -0 tar zcvf /gnu-cobol-2.0-install.tar.gz
+#
+#  So now the external environment will be about to 'docker cp ${id}:/gnu-cobol-2.0-install.tar.gz'
+#  to an interim location and then COPY it into the final target environment without all that sloppy
+#  SDK stuff.
+#
+#  TODO:  After which we can again fork into a 'compile' vs a 'run' image.
+#
