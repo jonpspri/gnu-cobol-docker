@@ -4,6 +4,8 @@
 #  means I guess that alpine linux will be our go-to distro, with a healthy
 #  serving of 'gmp', 'db', and 'ncurses'.
 #
+#  As of last check, the openwhisk dockerskeleton ran from alpine 3.4.
+#
 #  TODO:  Do away with the DB requirement -- it really doesn't help with our
 #         ISAM process.  Can I configure that now?  Probably not until I
 #         have an alternative.
